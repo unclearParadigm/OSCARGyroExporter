@@ -25,9 +25,9 @@ namespace OSCARGyroExporter {
           .AddSeconds(time.Second)
           .AddMilliseconds(time.Millisecond);
 
-        var gfx = Convert.ToDecimal(args[1].Replace(",", "."));
-        var gfy = Convert.ToDecimal(args[2].Replace(",", "."));
-        var gfz = Convert.ToDecimal(args[3].Replace(",", "."));
+        var gfx = decimal.Parse(args[1].Replace(",", "."), CultureInfo.InvariantCulture);
+        var gfy = decimal.Parse(args[2].Replace(",", "."), CultureInfo.InvariantCulture);
+        var gfz = decimal.Parse(args[3].Replace(",", "."), CultureInfo.InvariantCulture);
 
         return Result.Success(new InputModel(correctedTime, gfx, gfy, gfz));
       } catch (Exception) {
