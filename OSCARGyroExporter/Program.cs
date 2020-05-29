@@ -14,6 +14,9 @@ namespace OSCARGyroExporter {
     private static void Main(string[] args) {
       var inputPath = args.Any() && args.Length == 1 ? args[0] : DefaultInputPath;
 
+      Console.Title = "OSCAR Gyro Exporter v1.0";
+      Console.ForegroundColor = ConsoleColor.White;
+      
       ConsoleHelper.PrintInfo("OSCAR Gyro Exporter v1.0                                         unclearParadigm");
       ConsoleHelper.PrintInfo("--------------------------------------------------------------------------------");
       ConsoleHelper.PrintInfo($"Eingabedatei: {inputPath}");
