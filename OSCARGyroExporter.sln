@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OSCARGyroExporter", "OSCARGyroExporter\OSCARGyroExporter.csproj", "{21B50D79-91DE-469C-A715-08B5F941FC88}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OSCARGyroExporter", "src\OSCARGyroExporter\OSCARGyroExporter.csproj", "{21B50D79-91DE-469C-A715-08B5F941FC88}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
