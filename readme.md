@@ -1,6 +1,6 @@
 # OSCAR Gyroscope Exporter
 
-is an exporter to create an [OSCAR](https://www.sleepfiles.com/OSCAR/)-compatible CSV-file (that can be imported to OSCA) from recordings of [Physics Toolbox Sensor Suite](https://play.google.com/store/apps/details?id=com.chrystianvieyra.physicstoolboxsuite&hl=en) Android App.
+is an exporter to create an [OSCAR](https://www.sleepfiles.com/OSCAR/)-compatible CSV-file (that can be imported to OSCAR) from recordings of [Physics Toolbox Sensor Suite](https://play.google.com/store/apps/details?id=com.chrystianvieyra.physicstoolboxsuite&hl=en) Android App.
 
 ## Physics Toolbox Sensor Suite
 
@@ -25,9 +25,10 @@ analyze your sleep - completly free of charge.
 
 * Read from an export of the Android-app
 * Create a OSCAR-compatible output-CSV
-* Console Application (slick)
+* Console Application (slick, simple, automatable)
 * Possibility to enter reference date
 * Language in German
+* Cross-Platform (runs on Linux, Windows, MacOS)
 
 ## How to use
 
