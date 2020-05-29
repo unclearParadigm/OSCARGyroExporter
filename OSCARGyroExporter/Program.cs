@@ -95,8 +95,11 @@ namespace OSCARGyroExporter {
 
     private static Result<string> ConvertToOutputCsv(List<OutputModel> outputModels) {
       var sB = new StringBuilder();
+      sB
+        .Append("Timestamp,Orientation,Inclination,Time_of_day,Date")
+        .Append("\n");
+      
       foreach (var outputModel in outputModels) {
-        // Timestamp,Orientation,Inclination,Time_of_day,Date
         sB
           .Append(outputModel.Timestamp).Append(",")
           .Append(outputModel.Orientation).Append(",")
@@ -104,7 +107,7 @@ namespace OSCARGyroExporter {
           .Append(outputModel.TimeOfDay).Append(",")
           .Append(outputModel.Date).Append("\n");
       }
-
+      
       return Result.Success(sB.ToString());
     }
 
