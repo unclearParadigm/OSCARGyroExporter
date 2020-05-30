@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.Globalization;
+using CommandLine;
 using CSharpFunctionalExtensions;
 
 namespace OSCARGyroExporter {
@@ -12,37 +13,41 @@ namespace OSCARGyroExporter {
     private static readonly string DefaultOutputPath = $"{Path.Join(Environment.CurrentDirectory, "out.csv")}";
 
     private static void Main(string[] args) {
-      var inputPath = args.Any() && args.Length == 1 ? args[0] : DefaultInputPath;
+      Parser.Default
+        .ParseArguments<CmdArguments>(args)
+        .WithParsed(o => {
+          Console.Title = "OSCAR Gyro Exporter v1.1";
+          Console.ForegroundColor = ConsoleColor.White;
+          var inputPath = string.IsNullOrEmpty(o.InputPath) ? DefaultInputPath : o.InputPath;
+          
+          ConsoleHelper.PrintInfo("OSCAR Gyro Exporter v1.1                                         unclearParadigm");
+          ConsoleHelper.PrintInfo("--------------------------------------------------------------------------------");
+          ConsoleHelper.PrintInfo($"Eingabedatei: {inputPath}");
+          ConsoleHelper.PrintInfo($"Ausgabedatei: {DefaultOutputPath}");
+          ConsoleHelper.PrintInfo("--------------------------------------------------------------------------------");
 
-      Console.Title = "OSCAR Gyro Exporter v1.0";
-      Console.ForegroundColor = ConsoleColor.White;
-      
-      ConsoleHelper.PrintInfo("OSCAR Gyro Exporter v1.0                                         unclearParadigm");
-      ConsoleHelper.PrintInfo("--------------------------------------------------------------------------------");
-      ConsoleHelper.PrintInfo($"Eingabedatei: {inputPath}");
-      ConsoleHelper.PrintInfo($"Ausgabedatei: {DefaultOutputPath}");
-      ConsoleHelper.PrintInfo("--------------------------------------------------------------------------------");
+          var referenceDateTime = Result.Failure<DateTime>("No value");
+          while (referenceDateTime.IsFailure) {
+            referenceDateTime = ReadReferenceDate();
+            if (referenceDateTime.IsFailure) ConsoleHelper.PrintWarning(referenceDateTime.Error);
+          }
 
-      var referenceDateTime = Result.Failure<DateTime>("No value");
-      while (referenceDateTime.IsFailure) {
-        referenceDateTime = ReadReferenceDate();
-        if (referenceDateTime.IsFailure) ConsoleHelper.PrintWarning(referenceDateTime.Error);
-      }
+          var operationResult = ReadFile(inputPath)
+            .Bind(fileContent => MapToInputModels(fileContent, referenceDateTime.Value.AddMinutes(o.StaticTimezoneOffset)))
+            .Bind(MapToOutputModel)
+            .Bind(ConvertToOutputCsv)
+            .Bind(WriteToFile);
 
-      var operationResult = ReadFile(inputPath)
-        .Bind(fileContent => MapToInputModels(fileContent, referenceDateTime.Value))
-        .Bind(MapToOutputModel)
-        .Bind(ConvertToOutputCsv)
-        .Bind(WriteToFile);
+          if (operationResult.IsSuccess)
+            ConsoleHelper.PrintSuccess($"Konvertierung erfolgreich abgeschlossen. Die Datei befindet sich hier: {DefaultOutputPath}");
 
-      if (operationResult.IsSuccess)
-        ConsoleHelper.PrintSuccess($"Konvertierung erfolgreich abgeschlossen. Die Datei befindet sich hier: {DefaultOutputPath}");
-
-      if (operationResult.IsFailure)
-        ConsoleHelper.PrintError(operationResult.Error);
-
-      ConsoleHelper.PrintInfo("Beliebige Taste drücken um Applikation zu beenden...");
-      Console.ReadKey();
+          if (operationResult.IsFailure)
+            ConsoleHelper.PrintError(operationResult.Error);
+          if (o.HeadlessMode) return;
+          
+          ConsoleHelper.PrintInfo("Beliebige Taste drücken um Applikation zu beenden...");
+          Console.ReadKey();
+        });
     }
 
     private static Result<DateTime> ReadReferenceDate() {
