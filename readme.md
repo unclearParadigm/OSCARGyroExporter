@@ -29,10 +29,17 @@ analyze your sleep - completly free of charge.
 * Possibility to enter reference date
 * Language in German
 * Cross-Platform (runs on Linux, Windows, MacOS)
+* Commandline Interface for usage in scripts
 
 ## How to use
 
 Next to the executable (*.exe), put the input file which must be called "in.csv".
 Start the application. Enter the reference date (in format 'YYYY-MM-DD'), wait for
 the application to finish. Press any key to close the application. Inside the same directory the `in.csv` file was put, there is now a `out.csv` file which can now be imported into OSCAR.
+
+## Tech
+
+* .NET Core 3.1 / Console Application / C#
+* [CommandlineParser](https://github.com/commandlineparser/commandline)
+* [CSharpFunctionalExtensions](https://github.com/vkhorikov/CSharpFunctionalExtensions)
 
