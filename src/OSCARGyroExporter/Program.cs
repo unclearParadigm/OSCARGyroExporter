@@ -9,45 +9,90 @@ using CSharpFunctionalExtensions;
 
 namespace OSCARGyroExporter {
   internal static class Program {
-    private static readonly string DefaultInputPath = $"{Path.Join(Environment.CurrentDirectory, "in.csv")}";
-    private static readonly string DefaultOutputPath = $"{Path.Join(Environment.CurrentDirectory, "out.csv")}";
-
+    private const string Version = "v2.1";
     private static void Main(string[] args) {
-      Parser.Default
-        .ParseArguments<CmdArguments>(args)
-        .WithParsed(o => {
-          Console.Title = "OSCAR Gyro Exporter v1.1";
-          Console.ForegroundColor = ConsoleColor.White;
-          var inputPath = string.IsNullOrEmpty(o.InputPath) ? DefaultInputPath : o.InputPath;
+      Console.Title = $"OSCAR Gyro Exporter {Version}";
+      Console.ForegroundColor = ConsoleColor.White;
           
-          ConsoleHelper.PrintInfo("OSCAR Gyro Exporter v1.1                                         unclearParadigm");
-          ConsoleHelper.PrintInfo("--------------------------------------------------------------------------------");
-          ConsoleHelper.PrintInfo($"Eingabedatei: {inputPath}");
-          ConsoleHelper.PrintInfo($"Ausgabedatei: {DefaultOutputPath}");
-          ConsoleHelper.PrintInfo("--------------------------------------------------------------------------------");
+      ConsoleHelper.PrintInfo($"OSCAR Gyro Exporter {Version}                                         unclearParadigm");
+      ConsoleHelper.PrintInfo("--------------------------------------------------------------------------------");
+      
+      Parser.Default
+        .ParseArguments<ManualCmdArguments, AutomaticCmdArguments>(args)
+        .WithParsed<ManualCmdArguments>(ManualMode)
+        .WithParsed<AutomaticCmdArguments>(AutomaticMode);
+    }
 
+    private static void ManualMode(ManualCmdArguments arg) {
+      var referenceDate = AutoDetectReferenceDate(arg.InputFile)
+        .ToResult("Automatische Erkennung des Referenzdatum fehlgeschlagen")
+        .OnFailureCompensate(r => {
           var referenceDateTime = Result.Failure<DateTime>("No value");
           while (referenceDateTime.IsFailure) {
             referenceDateTime = ReadReferenceDate();
             if (referenceDateTime.IsFailure) ConsoleHelper.PrintWarning(referenceDateTime.Error);
           }
-
-          var operationResult = ReadFile(inputPath)
-            .Bind(fileContent => MapToInputModels(fileContent, referenceDateTime.Value.AddMinutes(o.StaticTimezoneOffset)))
-            .Bind(MapToOutputModel)
-            .Bind(ConvertToOutputCsv)
-            .Bind(WriteToFile);
-
-          if (operationResult.IsSuccess)
-            ConsoleHelper.PrintSuccess($"Konvertierung erfolgreich abgeschlossen. Die Datei befindet sich hier: {DefaultOutputPath}");
-
-          if (operationResult.IsFailure)
-            ConsoleHelper.PrintError(operationResult.Error);
-          if (o.HeadlessMode) return;
           
-          ConsoleHelper.PrintInfo("Beliebige Taste drücken um Applikation zu beenden...");
-          Console.ReadKey();
+          return referenceDateTime;
         });
+
+      var operationResult = ReadFile(arg.InputFile)
+        .Bind(fileContent => MapToInputModels(fileContent, referenceDate.Value.AddMinutes(arg.TimezoneOffset)))
+        .Bind(MapToOutputModel)
+        .Bind(ConvertToOutputCsv)
+        .Bind(fileContent => WriteToFile(fileContent, arg.OutputFile));
+
+      if (operationResult.IsSuccess)
+        ConsoleHelper.PrintSuccess($"Konvertierung erfolgreich abgeschlossen. Die Datei befindet sich hier: {arg.OutputFile}");
+
+      if (operationResult.IsFailure)
+        ConsoleHelper.PrintError(operationResult.Error);
+      
+      ConsoleHelper.PrintInfo("Beliebige Taste drücken um Applikation zu beenden...");
+      Console.ReadKey();
+    }
+
+    private static void AutomaticMode(AutomaticCmdArguments arg) {
+      if (!Directory.Exists(arg.InputDirectory)) {
+        ConsoleHelper.PrintError("Das Eingabeverzeichnis existiert nicht");
+        return;
+      }
+
+      if (!Directory.Exists(arg.OutputDirectory))
+        Directory.CreateDirectory(arg.OutputDirectory);
+      
+      foreach (var f in arg.GetFilesInInputDirectory()) {
+        var referenceDateTime = AutoDetectReferenceDate(Path.GetFileName(f));
+        if(referenceDateTime.HasNoValue) continue;
+        var outputFilepath = Path.Join(arg.OutputDirectory, Path.GetFileName(f));
+        
+        var operationResult = ReadFile(f)
+          .Bind(fileContent => MapToInputModels(fileContent, referenceDateTime.Value.AddMinutes(arg.TimezoneOffset)))
+          .Bind(MapToOutputModel)
+          .Bind(ConvertToOutputCsv)
+          .Bind(fileContent => WriteToFile(fileContent, outputFilepath));
+        
+        if (operationResult.IsSuccess)
+          ConsoleHelper.PrintSuccess($"{outputFilepath} -> OK");
+        
+        if (operationResult.IsFailure)
+          ConsoleHelper.PrintError(operationResult.Error);
+      }
+    }
+
+    private static Maybe<DateTime> AutoDetectReferenceDate(string filename) {
+      if(string.IsNullOrEmpty(filename))
+        return Maybe<DateTime>.None;
+      if (filename.Length < 10)
+        return Maybe<DateTime>.None;
+
+      try {
+        var substring = filename.Substring(0, 10);
+        var parsed = DateTime.ParseExact(substring, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+        return Maybe<DateTime>.From(parsed);
+      } catch {
+        return Maybe<DateTime>.None;
+      }
     }
 
     private static Result<DateTime> ReadReferenceDate() {
@@ -69,14 +114,19 @@ namespace OSCARGyroExporter {
       var lines = fileContent.Split(detectedFileEnding);
 
       var outputList = new List<Result<InputModel>>();
-
       foreach (var line in lines.Skip(1)) {
         var detectedColumnSeparatorChar = line.Contains(';') ? ';' : ',';
         var values = line.Split(detectedColumnSeparatorChar);
-        var inputModelResult = InputModel.Create(values, referenceDateTime);
+
+        var inputModelResult = InputModel.Create(
+          values, 
+          referenceDateTime, 
+          outputList.Where(c => c.IsSuccess).Select(c => c.Value).ToList());
 
         if (inputModelResult.IsFailure)
           ConsoleHelper.PrintWarning($"Fehlerhafte Zeile in Eingabedatei gefunden: '{inputModelResult.Error}'");
+        
+
 
         outputList.Add(inputModelResult);
       }
@@ -130,14 +180,14 @@ namespace OSCARGyroExporter {
       }
     }
 
-    private static Result WriteToFile(string outputCsv) {
-      if (File.Exists(DefaultOutputPath)) {
-        File.Delete(DefaultOutputPath);
+    private static Result WriteToFile(string outputCsv, string outputFilepath) {
+      if (File.Exists(outputFilepath)) {
+        File.Delete(outputFilepath);
       }
 
       try {
-        File.Create(DefaultOutputPath).Close();
-        using (var writer = new StreamWriter(DefaultOutputPath, false, Encoding.UTF8)) {
+        File.Create(outputFilepath).Close();
+        using (var writer = new StreamWriter(outputFilepath, false, Encoding.UTF8)) {
           writer.Write(outputCsv);
         }
 

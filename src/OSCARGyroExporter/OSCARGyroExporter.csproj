@@ -12,6 +12,9 @@
 
     <ItemGroup>
       <None Remove="in.csv" />
+      <Content Include="2020-01-013152315.csv">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
       <Content Include="in.csv">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>

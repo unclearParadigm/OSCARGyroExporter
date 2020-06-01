@@ -1,5 +1,8 @@
 using System;
+using System.Linq;
 using System.Globalization;
+using System.Collections.Generic;
+
 using CSharpFunctionalExtensions;
 
 namespace OSCARGyroExporter {
@@ -16,14 +19,19 @@ namespace OSCARGyroExporter {
       Gfz = gfz;
     }
 
-    public static Result<InputModel> Create(string[] args, DateTime referenceDateTime) {
+    public static Result<InputModel> Create(string[] args, DateTime referenceDateTime, List<InputModel> previousEntries) {
       try {
+        var max = previousEntries.Any() ? previousEntries.Max(c => c.Time) : DateTime.MinValue;
         var time = DateTime.ParseExact(args[0], "HH:mm:ss:ffff", CultureInfo.InvariantCulture);
         var correctedTime = referenceDateTime
           .AddHours(time.Hour)
           .AddMinutes(time.Minute)
           .AddSeconds(time.Second)
           .AddMilliseconds(time.Millisecond);
+        
+        while(correctedTime < max) {
+          correctedTime = correctedTime.AddDays(1);
+        }
 
         var gfx = decimal.Parse(args[1].Replace(",", "."), CultureInfo.InvariantCulture);
         var gfy = decimal.Parse(args[2].Replace(",", "."), CultureInfo.InvariantCulture);

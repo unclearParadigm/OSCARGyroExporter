@@ -20,15 +20,20 @@ namespace OSCARGyroExporter {
 
     public static Result<OutputModel> Create(InputModel inputModel) {
       try {
-        var timestamp = (uint)inputModel.Time.Subtract(new DateTime(2001, 1, 1)).TotalSeconds;
+        var timestamp = inputModel.Time.Subtract(new DateTime(2001, 1, 1)).TotalSeconds;
         var date = inputModel.Time.ToString("yyyy-MM-dd");
         var timeOfDay = inputModel.Time.ToString("HH:mm:ss");
 
         var orientation = (int)(90 - inputModel.Gfx * 90);
         var inclination = (int)(90 - inputModel.Gfy * 90);
         
+        var tsString = timestamp
+          .ToString(CultureInfo.InvariantCulture)
+          .Replace(",", ".")
+          .PadRight(13, '0');
+
         var model = new OutputModel(
-          timestamp.ToString(),
+          tsString,
           orientation.ToString(CultureInfo.InvariantCulture),
           inclination.ToString(CultureInfo.InvariantCulture),
           timeOfDay,
