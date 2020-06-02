@@ -24,18 +24,17 @@ namespace OSCARGyroExporter {
         var date = inputModel.Time.ToString("yyyy-MM-dd");
         var timeOfDay = inputModel.Time.ToString("HH:mm:ss");
 
-        var orientation = (int)(90 - inputModel.Gfx * 90);
-        var inclination = (int)(90 - inputModel.Gfy * 90);
-        
+        var orientation = inputModel.Gfx * 180;
+        var inclination = inputModel.Gfy * 180;
+
         var tsString = timestamp
           .ToString(CultureInfo.InvariantCulture)
-          .Replace(",", ".")
-          .PadRight(13, '0');
+          .Replace(",", ".");
 
         var model = new OutputModel(
           tsString,
-          orientation.ToString(CultureInfo.InvariantCulture),
-          inclination.ToString(CultureInfo.InvariantCulture),
+          orientation.ToString(CultureInfo.InvariantCulture).Replace(",","."),
+          inclination.ToString(CultureInfo.InvariantCulture).Replace(",","."),
           timeOfDay,
           date);
 
