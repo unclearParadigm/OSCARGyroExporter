@@ -31,6 +31,10 @@ namespace OSCARGyroExporter {
           .ToString(CultureInfo.InvariantCulture)
           .Replace(",", ".");
 
+        if (tsString.Split(".").Length != 2) {
+          tsString += ".000";
+        }
+        
         var model = new OutputModel(
           tsString,
           orientation.ToString(CultureInfo.InvariantCulture).Replace(",","."),

@@ -106,7 +106,7 @@ namespace OSCARGyroExporter {
       }
     }
 
-    private static Result<List<InputModel>> MapToInputModels(string fileContent, DateTime referenceDateTime) {
+    private static Result<List<InputModel>> MapToInputModels(string fileContent, DateTime referenceDateTime, int sampleRate) {
       if (string.IsNullOrWhiteSpace(fileContent))
         return Result.Failure<List<InputModel>>("Die angegebene Datei ist leer und entspricht nicht dem Eingabeformat");
 
@@ -114,7 +114,7 @@ namespace OSCARGyroExporter {
       var lines = fileContent.Split(detectedFileEnding);
 
       var outputList = new List<Result<InputModel>>();
-      foreach (var line in lines.Skip(1)) {
+      foreach (var line in lines.Skip(1).Where((x, i) => i % sampleRate == 0)) {
         var detectedColumnSeparatorChar = line.Contains(';') ? ';' : ',';
         var values = line.Split(detectedColumnSeparatorChar);
 

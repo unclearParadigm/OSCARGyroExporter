@@ -14,6 +14,9 @@ namespace OSCARGyroExporter {
     
     [Option('t', "timezoneoffset", Default=0, Required = false, HelpText = "Statischer Offset welcher zum/vom Referenzdatum addiert/subtrahiert wird")]
     public int TimezoneOffset { get; set; }
+
+    [Option('s', "samplerate", Default=1, Required = false, HelpText = "Abtastrate der Eingabedatei. 1=jeder Messpunkt, 2=jeder zweite Messpunkt, 3=..., 4...")]
+    public int SampleRate { get; set; }
   }
   
   // ReSharper disable once ClassNeverInstantiated.Global
@@ -27,6 +30,9 @@ namespace OSCARGyroExporter {
     
     [Option('t', "timezoneoffset", Default=0, Required = false, HelpText = "Statischer Offset welcher zum/vom Referenzdatum addiert/subtrahiert wird")]
     public int TimezoneOffset { get; set; }
+    
+    [Option('s', "samplerate", Default=1, Required = false, HelpText = "Abtastrate der Eingabedatei. 1=jeder Messpunkt, 2=jeder zweite Messpunkt, 3=..., 4...")]
+    public int SampleRate { get; set; }
 
     public string[] GetFilesInInputDirectory() => Directory.GetFiles(InputDirectory, "*.csv");
   }
