@@ -9,7 +9,7 @@ using CSharpFunctionalExtensions;
 
 namespace OSCARGyroExporter {
   internal static class Program {
-    private const string Version = "v2.1";
+    private const string Version = "v2.2";
     private static void Main(string[] args) {
       Console.Title = $"OSCAR Gyro Exporter {Version}";
       Console.ForegroundColor = ConsoleColor.White;
