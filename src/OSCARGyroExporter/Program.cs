@@ -37,7 +37,7 @@ namespace OSCARGyroExporter {
         });
 
       var operationResult = ReadFile(arg.InputFile)
-        .Bind(fileContent => MapToInputModels(fileContent, referenceDate.Value.AddMinutes(arg.TimezoneOffset)))
+        .Bind(fileContent => MapToInputModels(fileContent, referenceDate.Value.AddMinutes(arg.TimezoneOffset), arg.SampleRate))
         .Bind(MapToOutputModel)
         .Bind(ConvertToOutputCsv)
         .Bind(fileContent => WriteToFile(fileContent, arg.OutputFile));
@@ -67,7 +67,7 @@ namespace OSCARGyroExporter {
         var outputFilepath = Path.Join(arg.OutputDirectory, Path.GetFileName(f));
         
         var operationResult = ReadFile(f)
-          .Bind(fileContent => MapToInputModels(fileContent, referenceDateTime.Value.AddMinutes(arg.TimezoneOffset)))
+          .Bind(fileContent => MapToInputModels(fileContent, referenceDateTime.Value.AddMinutes(arg.TimezoneOffset), arg.SampleRate))
           .Bind(MapToOutputModel)
           .Bind(ConvertToOutputCsv)
           .Bind(fileContent => WriteToFile(fileContent, outputFilepath));
